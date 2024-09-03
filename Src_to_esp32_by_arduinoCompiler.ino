@@ -724,7 +724,7 @@ void WifiGest::server_handle(uint8_t pin_A[4] , uint8_t pin4 , uint8_t pin5 , ui
 
     SharedPtr<String> resp = SharedPtr<String>(new String(""));
 
-     //lecture datagrame TCP
+   //lecture datagrame TCP
     while (client.connected())
     {
       delay(500);
@@ -908,9 +908,10 @@ void WifiGest::server_handle(uint8_t pin_A[4] , uint8_t pin4 , uint8_t pin5 , ui
             
           if( millis() - i <= 30000)
           {
-
+            //mesure des diode mosfet
             if(bridgeDivisorU1< 20000 , 1000 >(analogReader<Echentillonage>(pin5)) <= 2.18 )
             {
+               //switch des pont diviseur , passage de 50 a 5k
               digitalWrite(relais1 , LOW);
               delay(10000);
 
@@ -924,8 +925,10 @@ void WifiGest::server_handle(uint8_t pin_A[4] , uint8_t pin4 , uint8_t pin5 , ui
                 #endif
               }
 
+               //repassage sur les 50ohm
               digitalWrite(relais1 , HIGH);
 
+               //evoie des valeur dans le bloc d'affichage html
               send_showValue<4>( client , res , 600 , 300, 900 , "6 - CONTROLE DES MOSFET PILOTAGE MOTEUR BIPOLAIRE" , "ΔU" , "mV" , "Les valeurs affichées sont plus dures à interpréter. Elles représentent la chute de tension aux bornes du MOSFET, une diode de roue libre y est presente, c'est elle qui provoque la chute de tension, des valeurs  proches de 0 mv indique un MOSFET ( HS)  passant ou shunté par sa diode passant (HS) .  Dès valeur proche de 3300 mv indiqueraient une diode coupée et un MOSFET non passant ou bien une connectique non branché. Des valeurs correcte ne garantissent pas que le MOSFET est fonctionnel il peut etre jamais passant");
 
               delay(500);
@@ -939,7 +942,8 @@ void WifiGest::server_handle(uint8_t pin_A[4] , uint8_t pin4 , uint8_t pin5 , ui
           {
             sendAdvertisse(client , "Tension alimentation non nulle , mesures des MOSFET non exécuteées" );
           }
-          
+
+           //garentie de etat repos relais
           digitalWrite(relais3 , HIGH );
           digitalWrite(relais1 , HIGH );
           digitalWrite(relais2 , HIGH );
@@ -952,9 +956,10 @@ void WifiGest::server_handle(uint8_t pin_A[4] , uint8_t pin4 , uint8_t pin5 , ui
           client.print( " </html> ");
           client.println();
 
-
+         //stop de la connection tcp
           client.stop();
           delay(5000);
+           //redémarage de l'esp
           ESP.restart();
         }
         else if( root == "/favicon.ico" )
@@ -1008,6 +1013,8 @@ uint8_t const pin_A6_24ref = 32;
 SharedPtr<WifiGest> wifi_gest;
 void setup() 
 {
+
+   //definition des sortie util esp a l'etat repos
   pinMode(pin_relais_1 , OUTPUT);
   digitalWrite( pin_relais_1 ,HIGH );
   
@@ -1027,6 +1034,7 @@ void setup()
 
 void loop() 
 {
+   //boolce principal surveillance serveur http
    wifi_gest->server_handle(pin_A , pin_A6_24ref , pin_A5_36ref ,pin_relais_1 ,pin_relais_2 , pin_relais_3);
 
    delay(100);
