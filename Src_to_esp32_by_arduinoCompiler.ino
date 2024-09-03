@@ -194,6 +194,11 @@ template<typename T> class SharedPtr
 
 };
 
+
+
+/*
+reponse http OK
+*/
 void sendOk(WiFiClient & client)
 {
     client.println("HTTP/1.1 200 OK");
@@ -201,6 +206,9 @@ void sendOk(WiFiClient & client)
   client.println();
 }
 
+/*
+envoie du pied de page html
+*/
 void sendFooter(WiFiClient & client)
 {
     client.print(F("<footer style=\"color:red;font-size:10px;\">"
@@ -214,7 +222,9 @@ void sendFooter(WiFiClient & client)
   
 "</footer>"));
 }
-
+/*
+envoie des message de msie en garde html
+*/
 void mise_en_garde(WiFiClient & client)
 {
     client.print(F("<div class=\"cptShwo\" style=\"color:red;font-size:11px;\">"
@@ -228,7 +238,9 @@ void mise_en_garde(WiFiClient & client)
   
 "</div>"));
 }
-
+/*
+envoie du bouton de lancer de test html
+*/
 void sendUpdateButton (WiFiClient & client)
 {
     client.print(F("<form action=\"/\" method=\"get\">" 
@@ -238,6 +250,9 @@ void sendUpdateButton (WiFiClient & client)
             "</form>"
             ));
 }
+/*
+envoie du bloc message d'avertissemnt html
+*/
 void sendAdvertisse(WiFiClient & client , String const & msg)
 {
     client.print(
@@ -248,7 +263,10 @@ void sendAdvertisse(WiFiClient & client , String const & msg)
             );
 }
 
-
+/*
+code generique d'afffichege d'un ensemble de valeur 
+envoie du code html
+*/
 template<int N> void send_showValue(WiFiClient &client, float value[N], float attempt, float min, float max, String const &title, String const &name = "", String const &unit = "", String const &help = "")
 {
     // Fonction d'échappement des caractères HTML
@@ -289,6 +307,9 @@ template<int N> void send_showValue(WiFiClient &client, float value[N], float at
     client.print("<p style=\"color:blue;font-size:10px;\">Info: " + escapedHelp + "</p></div>");
 }
 
+/*
+envoie de l'entete html
+*/
 void sendHeader(WiFiClient & client)
 {
     client.print(F("<header>"
@@ -409,7 +430,9 @@ void sendHeader(WiFiClient & client)
     "</header>"));
 }
 
-
+/*
+fonction de décodage caractere speciaux
+   */
 void htlmDecodeSpecialChar(String & data)
 {
   String const encodeChar[225]= {" ","!","\"","#","$","%","&","\'","(",")","*","+",",","-",".","/","0","1",
@@ -433,7 +456,9 @@ void htlmDecodeSpecialChar(String & data)
 }
 
 #ifdef DEBUG_MODE
-
+/*
+fonction de définition de débugage evenement wifi
+   */
 static void debugWiFiEvent(WiFiEvent_t event)
 {
      switch (event) {
@@ -531,22 +556,29 @@ static void debugWiFiEvent(WiFiEvent_t event)
 #define ADC_reso 4095.0f
 #define Echentillonage 20
 
+/*
+   lecture analogique par moyennage et calibration
+*/
 template<uint8_t n> float analogReader(uint8_t pin )
 {
   uint8_t nread =  n == 0 ? 1 : n;
 
   float res = 0;
 
+   //lecture de stabilisation
   analogRead(pin);
   delay(1);
 
+   
+  // integration des N valeur lu
+   
   for( auto i =0 ; i < nread ; i++)
   {
     res+=analogRead(pin);
     delay(1);
   }
     
-
+// moyenne de la population de valeur
   res /= (float)nread ;
 
   #ifdef DEBUG_MODE
@@ -554,8 +586,10 @@ template<uint8_t n> float analogReader(uint8_t pin )
   Serial.println(res);
   #endif
 
+   //calibration 
   res =OffsetcalibrationAnalog + FactorcalibrationAnalog * res * (Vref/ADC_reso);
 
+   //mappage des extremité high et low
   if( res > Vref)
     res = Vref;
   if(res  <= OffsetcalibrationAnalog)
@@ -569,6 +603,9 @@ template<uint8_t n> float analogReader(uint8_t pin )
   return res;
 }
 
+/*
+   convertion d'une valeur analogique de sortie pont diviseur en tension d'entrée pont diviseur
+   */
 template<unsigned int r1 , unsigned int r2> float bridgeDivisorU1( float vout  )
 {
   if( r2 ==0 ||  (r1 + r2 )==0)
@@ -576,7 +613,9 @@ template<unsigned int r1 , unsigned int r2> float bridgeDivisorU1( float vout  )
 
   return   vout / ( (float)r2 / (r1 + r2 )) ;
 }
-
+/*
+   convertion d'une valeur analogique de sortie pont diviseur et d'une valeur d'entrée pont diviseur en valeur ohmique des la resistance de tete de pont
+   */
 template<unsigned int r1>  float bridgeDivisorR2( float ui ,float vout )
 {
   if(ui <= 1e-6 || vout <= OffsetcalibrationAnalog || ui - vout <= OffsetcalibrationAnalog   )
@@ -585,6 +624,14 @@ template<unsigned int r1>  float bridgeDivisorR2( float ui ,float vout )
   return vout * (float)r1 / (  ui - vout) ;
 }
 
+/*
+ __          ___  __ _  _____           _   
+ \ \        / (_)/ _(_)/ ____|         | |  
+  \ \  /\  / / _| |_ _| |  __  ___  ___| |_ 
+   \ \/  \/ / | |  _| | | |_ |/ _ \/ __| __|
+    \  /\  /  | | | | | |__| |  __/\__ \ |_ 
+     \/  \/   |_|_| |_|\_____|\___||___/\__|
+   */
 //class de gestion des evenement lier au wifi
 class WifiGest
 {
@@ -599,7 +646,6 @@ class WifiGest
 
     SharedPtr<WiFiClass> & get_wifi_inst(void);
     
-
     void server_handle(uint8_t pin_A[4] , uint8_t pin4 , uint8_t pin5 , uint8_t relais1 , uint8_t relais2 ,uint8_t relais3);
     void stop(void);
   protected : 
@@ -619,31 +665,36 @@ WifiGest::WifiGest(String const & _ap_ssid , String const & _ap_pswd , String co
 {
   this->m_wifi = SharedPtr<WiFiClass>( new WiFiClass() ) ;
 
+   //definition du server tcp ouvert en port 80
   this->m_server = SharedPtr<WiFiServer>( new WiFiServer(80) ) ;
 
   #ifdef DEBUG_MODE
     this->m_wifi->onEvent( debugWiFiEvent );
   #endif
 
+   // init en mode sta et definition du DNS
   this->m_wifi->mode(WIFI_OFF);
   this->m_wifi->mode(WIFI_AP_STA);
   this->m_wifi->setHostname( this->m_dns.c_str());
 
+   //si echec coupure du module wifi
   if( !this->m_wifi->softAP( this->m_ap_ssid.c_str() , this->m_ap_pswd.c_str() ) )
   {
   this->m_wifi->mode(WIFI_OFF);
   return;
   }
   
-
+   //inti de l'ip local
   if(!this->m_wifi->softAPConfig(IPAddress(192,168,2,1) , IPAddress(192,168,2,1) , IPAddress(255,255,255,0)))
   {
   this->m_wifi->mode(WIFI_OFF);
   return ;
   }
-  
+
+   //demarage service dns
   MDNS.begin( this->m_dns.c_str() );
 
+   //démarage serveur tcp
   this->m_server->begin();
         
 
@@ -651,24 +702,29 @@ WifiGest::WifiGest(String const & _ap_ssid , String const & _ap_pswd , String co
 
 void WifiGest::stop(void)
 {
+   //arret du wifi
   this->m_wifi->mode(WIFI_OFF); 
 }
 SharedPtr<WiFiClass> & WifiGest::get_wifi_inst(void)
 {
+   //retourn l'objet de gestion interne wifi
   return this->m_wifi;
 }
 
-
+/*
+methode de boucle principal serveur "min"
+   */
 void WifiGest::server_handle(uint8_t pin_A[4] , uint8_t pin4 , uint8_t pin5 , uint8_t relais1 , uint8_t relais2 ,uint8_t relais3)
 {
 
   WiFiClient client = this->m_server->available();  
-
+   //attente d'un client
   if (client)
   {       
 
     SharedPtr<String> resp = SharedPtr<String>(new String(""));
 
+     //lecture datagrame TCP
     while (client.connected())
     {
       delay(500);
@@ -682,10 +738,10 @@ void WifiGest::server_handle(uint8_t pin_A[4] , uint8_t pin4 , uint8_t pin5 , ui
       Serial.println(*resp.get());  
     #endif
 
-
+   //attente mini get ou post 
     if(resp->length()>=3 )
     {
-      
+      // si requette http get
       if( resp->substring( 0, 3 ) == "GET" )
       {
         String root = this->getRoot(resp->substring( 4, 24 ));
@@ -694,6 +750,7 @@ void WifiGest::server_handle(uint8_t pin_A[4] , uint8_t pin4 , uint8_t pin5 , ui
           Serial.println( String(" Chemin : ") + root);  
         #endif
 
+         //si racine demandé envoie de la page d'aceuil et d'avertissement (html)
         if(  root == "/")
         {
           sendOk(client);
@@ -703,7 +760,8 @@ void WifiGest::server_handle(uint8_t pin_A[4] , uint8_t pin4 , uint8_t pin5 , ui
           sendHeader(client);
           
           mise_en_garde(client);
-          
+
+         // vérification presence alim markem2200 ( 36v en tete de pont)
           bridgeDivisorU1< 20000 , 1000 >(analogReader<Echentillonage>(pin5) );
           delay(500);
 
@@ -713,6 +771,8 @@ void WifiGest::server_handle(uint8_t pin_A[4] , uint8_t pin4 , uint8_t pin5 , ui
           // regarde si cable moteur branché
 
           float  res[4];
+
+           //verification présence moteur bipolaire
 
           for(auto i =0 ; i < 4 ; i++)
           {
@@ -731,9 +791,10 @@ void WifiGest::server_handle(uint8_t pin_A[4] , uint8_t pin4 , uint8_t pin5 , ui
           client.print( " </html> ");
           client.println();
         }
+           //si requette de test recu
         else if( root == "/?" )
         {
-
+         
           sendOk(client);
 
           client.print( "<html> ");
@@ -745,7 +806,7 @@ void WifiGest::server_handle(uint8_t pin_A[4] , uint8_t pin4 , uint8_t pin5 , ui
           float uref[1] ;
           delay(100);
           
-          //prise de la tension de référence
+          //prise de la tension de référence boitier ( 24vcc en tete d epont)
           uref[0] = bridgeDivisorU1< 10000 , 1000 >(analogReader<Echentillonage>(pin4));
           if( uref[0] < 1.72)
             uref[0] = 0;
@@ -756,6 +817,7 @@ void WifiGest::server_handle(uint8_t pin_A[4] , uint8_t pin4 , uint8_t pin5 , ui
             Serial.println(uref[0]);
           #endif
 
+         // envoie du bloc html d'affichage de la valeur
           send_showValue<1>( client , uref , 24 , 18, 29 , "Tension de référence" , "U" , "V" , "Référence pour certaines mesures" );
           
           float Ualim[1] ;
@@ -768,6 +830,8 @@ void WifiGest::server_handle(uint8_t pin_A[4] , uint8_t pin4 , uint8_t pin5 , ui
             Serial.print(F("tension alim: "));
             Serial.println(Ualim[0]);
           #endif
+
+           // envoie du bloc html d'affichage de la valeur
           send_showValue<1>( client , Ualim , 36 , 32, 40 , "1 - CONTROLE TENSION ALIMENTATION" , "U" , "V" , "Des tensions trop faibles peuvent amener un mauvais fonctionnement ( vibration, ... ) et des tensions > à 44v sont destructives");
           
 
@@ -785,21 +849,23 @@ void WifiGest::server_handle(uint8_t pin_A[4] , uint8_t pin4 , uint8_t pin5 , ui
           }
 
           send_showValue<4>(client , res , 0 , 0.0f, 0.2f ,"2 - CONTROLE PRESENCE ENROULEMENT MOTEUR BIPOLAIRE", "CONT", "V","on attend des valeurs très proche de 0v , pour valider la continuité d'un enroulement" );
-          //coupure 230v
+          //coupure 230v et switch tension de controle enroulement
           digitalWrite(relais2 , LOW );
 
           sendAdvertisse(client , "3 - COUPURE 230V ALIMENTATION" );
 
           delay(1000);
+
+           //si tout les enroulement détecter
           
-
-          if( res[0] < 0.5 &&  res[1] < 0.5 && res[2] < 0.5 && res[3] < 0.5)
+          if( res[0] < 0.2 &&  res[1] < 0.2 && res[2] < 0.2 && res[3] < 0.2)
           {
-
+            // envoie du 24vcc pour controle enroulmeent
             digitalWrite(relais3 , LOW );
 
             delay(2000);
 
+             // mesure des enrouelment
             for(auto i = 0 ; i < 4 ; i++)
             {
               res[i] = bridgeDivisorR2<50>( uref[0] , analogReader<Echentillonage>(pin_A[i]) );
@@ -812,19 +878,19 @@ void WifiGest::server_handle(uint8_t pin_A[4] , uint8_t pin4 , uint8_t pin5 , ui
 
             send_showValue<4>( client , res , 2 , 1.3, 2.6 , "4 - CONTROLE RESISTANCES ENROULEMENTS MOTEUR BIPOLAIRE" , "R" , "Ω" , "Des résistances trop fortes peuvent amener un mauvais fonctionnement ( vibration, ... ) et des résistance < a 1Ω sont destructive" );
 
-
+            //coupure du 24v et repassage sur 3.3v
             digitalWrite(relais3 , HIGH );
           }
           else
           {
-
             sendAdvertisse(client , "Des enroulements n'ont pas été vus , mesures des résistances non exécutées" );
           }
 
-        
           delay(1000);
+           
           sendAdvertisse(client , "5 - CONTROLE TENSION ALIMENTATION NUL  patienter ... +-30s" );
 
+           //attente d'une tension nulle a la place de 36vcc
           long int i = millis();
           while(bridgeDivisorU1< 20000 , 1000 >(analogReader<Echentillonage>(pin5) ) > 2.18)
           {
@@ -839,7 +905,7 @@ void WifiGest::server_handle(uint8_t pin_A[4] , uint8_t pin4 , uint8_t pin5 , ui
             i=millis();
           }
           
-
+            
           if( millis() - i <= 30000)
           {
 
