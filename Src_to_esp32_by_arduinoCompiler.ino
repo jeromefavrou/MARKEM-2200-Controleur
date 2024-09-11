@@ -35,6 +35,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.*/
 #define AP_PSWD "maintenance"  // Définir un mot de passe 8 caractere mini
 #define DNS "controleur2200markem" // definir un nom de domaine
 
+
+//! Attention version soft wifi 
 #include <WiFi.h>
 #include <WiFiMulti.h>
 #include <WiFiAP.h>
